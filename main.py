@@ -6,8 +6,9 @@ import time
 import psutil
 import zlib
 from memory_profiler import memory_usage
+import cProfile
 
-profile_results_json = 'profile_results.json'
+profile_results_json = 'profiling_results.json'
 
 
 # Hash Functions
@@ -25,10 +26,6 @@ def hash_sha256(data):
 
 def hash_crc32(data):
     return '%08X' % (zlib.crc32(data) & 0xFFFFFFFF)
-
-
-# def hash_crc64(data):
-#     return '%08X' % (zlib.crc64(data) & 0xFFFFFFFF)
 
 
 # Profiling Function
@@ -57,8 +54,7 @@ def main():
     results = {}
 
     for file_size_str, file_size in file_sizes.items():
-        # Sample data to hash
-        data = eight_bit_string * file_size
+        data = eight_bit_string * file_size  # Sample data to hash
         for func in hash_functions:
             aggregated_results = {'time': 0, 'memory': 0, 'cpu': 0}
             iterations = 10
@@ -86,4 +82,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    cProfile.run('main()', 'profiling_results')
