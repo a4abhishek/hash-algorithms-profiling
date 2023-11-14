@@ -3,36 +3,55 @@
 import hashlib
 import json
 import time
+import os
 import psutil
 import zlib
 from memory_profiler import memory_usage
 import cProfile
 
+hash_input_directory = 'hash_input'
 profile_results_json = 'profiling_results.json'
+buffer_size = 50 * 1024 * 1024  # 50 MB buffer size
 
 
-# Hash Functions
-def hash_md5(data):
-    return hashlib.md5(data).hexdigest()
+# Hash Functions for buffered reading from file
+def hash_file_md5(file_path):
+    hash_md5 = hashlib.md5()
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(buffer_size), b''):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 
-def hash_sha1(data):
-    return hashlib.sha1(data).hexdigest()
+def hash_file_sha1(file_path):
+    hash_sha1 = hashlib.sha1()
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(buffer_size), b''):
+            hash_sha1.update(chunk)
+    return hash_sha1.hexdigest()
 
 
-def hash_sha256(data):
-    return hashlib.sha256(data).hexdigest()
+def hash_file_sha256(file_path):
+    hash_sha256 = hashlib.sha256()
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(buffer_size), b''):
+            hash_sha256.update(chunk)
+    return hash_sha256.hexdigest()
 
 
-def hash_crc32(data):
-    return '%08X' % (zlib.crc32(data) & 0xFFFFFFFF)
+def hash_file_crc32(file_path):
+    crc32 = 0
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(buffer_size), b''):
+            crc32 = zlib.crc32(chunk, crc32)
+    return '%08X' % (crc32 & 0xFFFFFFFF)
 
 
 # Profiling Function
-def profile_hash_function(hash_function, data):
+def profile_hash_function(hash_function, file_path):
     start_time = time.time()
     start_cpu = psutil.cpu_percent(interval=None)
-    mem_usage = memory_usage((hash_function, (data,)))
+    mem_usage = memory_usage((hash_function, (file_path,)))
     end_cpu = psutil.cpu_percent(interval=None)
     end_time = time.time()
 
@@ -45,21 +64,18 @@ def profile_hash_function(hash_function, data):
 
 # Main Execution
 def main():
-    eight_bit_string = b"8bitsstr"
-    file_sizes = {'1 KB': 1024,
-                  '1 MB': 1024 * 1024,
-                  '50 MB': 50 * 1024 * 1024}
-    # '500 MB': 500 * 1024 * 1024} # Refrain from having very large size as it will be stored in memory
-    hash_functions = [hash_md5, hash_sha1, hash_sha256, hash_crc32]
+    hash_functions = [hash_file_md5, hash_file_sha1, hash_file_sha256, hash_file_crc32]
     results = {}
 
-    for file_size_str, file_size in file_sizes.items():
-        data = eight_bit_string * file_size  # Sample data to hash
+    for file_name in os.listdir(hash_input_directory):
+        file_path = os.path.join(hash_input_directory, file_name)
+        file_size = os.path.getsize(file_path)
+        file_size_str = f'{file_size} bytes'
         for func in hash_functions:
             aggregated_results = {'time': 0, 'memory': 0, 'cpu': 0}
             iterations = 10
             for _ in range(iterations):
-                result = profile_hash_function(func, data)
+                result = profile_hash_function(func, file_path)
                 aggregated_results['time'] += result['time']
                 aggregated_results['memory'] += result['memory']
                 aggregated_results['cpu'] += result['cpu']

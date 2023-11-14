@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.9
+
 import json
 import matplotlib.pyplot as plt
 
@@ -7,12 +9,16 @@ with open('profiling_results.json', 'r') as f:
 
 # Initialize data structures for plotting
 file_sizes = []  # X-axis: File sizes
-compute_time = { 'hash_md5': [], 'hash_sha1': [], 'hash_sha256': [], 'hash_crc32': [] }  # Y-axis: Compute time per algorithm
-cpu_usage = { 'hash_md5': [], 'hash_sha1': [], 'hash_sha256': [], 'hash_crc32': [] }  # Y-axis: CPU usage per algorithm
-memory_usage = { 'hash_md5': [], 'hash_sha1': [], 'hash_sha256': [], 'hash_crc32': [] }  # Y-axis: Memory usage per algorithm
+compute_time = {'hash_file_md5': [], 'hash_file_sha1': [], 'hash_file_sha256': [],
+                'hash_file_crc32': []}  # Y-axis: Compute time per algorithm
+cpu_usage = {'hash_file_md5': [], 'hash_file_sha1': [], 'hash_file_sha256': [],
+             'hash_file_crc32': []}  # Y-axis: CPU usage per algorithm
+memory_usage = {'hash_file_md5': [], 'hash_file_sha1': [], 'hash_file_sha256': [],
+                'hash_file_crc32': []}  # Y-axis: Memory usage per algorithm
 
-# Extract data
-for file_size, algorithms in results.items():
+# Extract data and sort by file size
+sorted_data = sorted(results.items(), key=lambda x: int(x[0].split()[0]))
+for file_size, algorithms in sorted_data:
     file_sizes.append(file_size)
     for algorithm, metrics in algorithms.items():
         compute_time[algorithm].append(metrics['time'])

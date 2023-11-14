@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.9
+
 import pstats
 
 if __name__ == '__main__':
